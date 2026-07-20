@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Notification from '../components/Notification';
@@ -21,6 +21,7 @@ function countDigits(value) {
 
 export default function CheckoutPage() {
   const { items, total, setLastOrder } = useCart();
+  const [sandboxEnabled, setSandboxEnabled] = useSandboxSetting();
   const location = useLocation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -159,12 +160,52 @@ export default function CheckoutPage() {
               <span>Total</span>
               <span>{formatLkr(total)}</span>
             </div>
-            <Link to="/cart" className="secondary-button w-full">
-              Review Cart
-            </Link>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={sandboxEnabled}
+                    onChange={(e) => {
+                      const next = e.target.checked;
+                      setSandboxEnabled(next);
+                      try {
+                        window.localStorage.setItem('ceyloncart-simulated-payment', String(next));
+                      } catch (_) {}
+                    }}
+                  />
+                  <span className="font-medium">Use simulated payments</span>
+                </label>
+                <span className="text-xs text-brown-600">{sandboxEnabled ? 'Sandbox' : 'Live (not configured)'}</span>
+              </div>
+
+              <Link to="/cart" className="secondary-button w-full">
+                Review Cart
+              </Link>
+            </div>
           </aside>
         </div>
       </div>
     </section>
   );
+}
+
+// local state initializer for sandbox toggle (keeps file-scope small)
+function useSandboxSetting() {
+  const [sandboxEnabled, setSandboxEnabled] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem('ceyloncart-simulated-payment');
+      return raw === null ? true : raw === 'true';
+    } catch (_) {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('ceyloncart-simulated-payment', String(sandboxEnabled));
+    } catch (_) {}
+  }, [sandboxEnabled]);
+
+  return [sandboxEnabled, setSandboxEnabled];
 }

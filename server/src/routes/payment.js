@@ -9,30 +9,33 @@ function delay(ms) {
 }
 
 router.post('/simulate', async (request, response) => {
-  const normalizedCardNumber = String(request.body?.cardNumber || '')
-    .replace(/\s+/g, '')
-    .trim();
+  try {
+    const normalizedCardNumber = String(request.body?.cardNumber || '')
+      .replace(/\s+/g, '')
+      .trim();
 
-  await delay(1000);
+    if (!normalizedCardNumber) {
+      return response.status(400).json({ success: false, message: 'cardNumber is required' });
+    }
 
-  if (normalizedCardNumber === SUCCESS_CARD_NUMBER) {
-    return response.json({
-      success: true,
-      message: 'Payment succeeded.',
-    });
+    // Simulate processing delay
+    await delay(1000);
+
+    if (normalizedCardNumber === SUCCESS_CARD_NUMBER) {
+      return response.json({ success: true, message: 'Payment succeeded.' });
+    }
+
+    if (normalizedCardNumber === FAILURE_CARD_NUMBER) {
+      return response.status(402).json({ success: false, message: 'Payment declined.' });
+    }
+
+    return response.status(402).json({ success: false, message: 'Payment declined.' });
+  } catch (err) {
+    // Log unexpected errors for easier debugging while keeping response generic
+    // eslint-disable-next-line no-console
+    console.error('Payment simulation error:', err?.stack || err);
+    return response.status(500).json({ success: false, message: 'Internal server error' });
   }
-
-  if (normalizedCardNumber === FAILURE_CARD_NUMBER) {
-    return response.json({
-      success: false,
-      message: 'Payment failed.',
-    });
-  }
-
-  return response.json({
-    success: false,
-    message: 'Payment failed.',
-  });
 });
 
 export default router;

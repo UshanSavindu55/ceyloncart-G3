@@ -63,8 +63,14 @@ export default function CataloguePage() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {products.map((product) => (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cream-200 bg-cream-50 px-4 py-3 text-sm text-brown-700">
+              <span>Showing {products.length} products</span>
+              <span className="font-medium">Browse locally made favourites</span>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {products.map((product) => (
               <article key={product.id} className="card-surface flex h-full flex-col overflow-hidden">
                 <img
                   src={product.image}

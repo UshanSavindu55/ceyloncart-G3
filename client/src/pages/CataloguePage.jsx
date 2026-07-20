@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { fetchAllProducts } from '../services/api';
 
@@ -15,6 +15,8 @@ export default function CataloguePage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All categories');
 
   const loadProducts = async () => {
     setLoading(true);
@@ -33,6 +35,34 @@ export default function CataloguePage() {
   useEffect(() => {
     loadProducts();
   }, []);
+
+  const categories = useMemo(() => {
+    return ['All categories', ...new Set(products.map((product) => product.category))];
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return products.filter((product) => {
+      const matchesCategory =
+        selectedCategory === 'All categories' || product.category === selectedCategory;
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        [product.name, product.category, product.shortDescription, product.description]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedSearch);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [products, searchTerm, selectedCategory]);
+
+  const hasActiveFilters = searchTerm.trim().length > 0 || selectedCategory !== 'All categories';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('All categories');
+  };
 
   return (
     <section className="page-container py-10 sm:py-14">
@@ -56,6 +86,33 @@ export default function CataloguePage() {
               Discover tea, spices, handicrafts, apparel, and personal care essentials from small local makers.
             </p>
           </div>
+          <div className="grid gap-4 rounded-3xl bg-white/80 p-4 ring-1 ring-cream-200 sm:grid-cols-[minmax(0,1fr)_240px]">
+            <label className="space-y-2">
+              <span className="text-sm font-semibold text-brown-700">Search products</span>
+              <input
+                className="form-input"
+                type="search"
+                placeholder="Search by name, category, or description"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-sm font-semibold text-brown-700">Category</span>
+              <select
+                className="form-input"
+                value={selectedCategory}
+                onChange={(event) => setSelectedCategory(event.target.value)}
+              >
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
 
         {loading ? (
@@ -68,15 +125,35 @@ export default function CataloguePage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cream-200 bg-cream-50 px-4 py-3 text-sm text-brown-700 shadow-sm">
-              <span className="font-semibold">Showing {products.length} products</span>
-              <span className="font-medium">Browse locally made favourites</span>
+
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-brown-600">
+              <span>
+                Showing {filteredProducts.length} of {products.length} products
+              </span>
+              {hasActiveFilters ? (
+                <button className="secondary-button px-4 py-2 text-xs" onClick={clearFilters} type="button">
+                  Clear filters
+                </button>
+              ) : null}
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {products.map((product) => (
-              <article key={product.id} className="card-surface flex h-full flex-col overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+            {filteredProducts.length === 0 ? (
+              <div className="card-surface space-y-3 text-center">
+                <h2 className="heading-md">No products match your filters.</h2>
+                <p className="body-copy text-sm">
+                  Try a different search term or choose another category.
+                </p>
+                {hasActiveFilters ? (
+                  <button className="secondary-button mx-auto" onClick={clearFilters} type="button">
+                    Reset filters
+                  </button>
+                ) : null}
+              </div>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {filteredProducts.map((product) => (
+              <article key={product.id} className="card-surface flex h-full flex-col overflow-hidden">
                 <img
                   src={product.image}
                   alt={product.name}
@@ -109,7 +186,9 @@ export default function CataloguePage() {
                   </div>
                 </div>
               </article>
-            ))}
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

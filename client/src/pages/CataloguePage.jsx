@@ -71,7 +71,7 @@ export default function CataloguePage() {
 
             <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {products.map((product) => (
-              <article key={product.id} className="card-surface flex h-full flex-col overflow-hidden">
+              <article key={product.id} className="card-surface flex h-full flex-col overflow-hidden transition-transform duration-200 hover:-translate-y-1">
                 <img
                   src={product.image}
                   alt={product.name}
@@ -80,7 +80,7 @@ export default function CataloguePage() {
 
                 <div className="mt-5 flex flex-1 flex-col gap-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
+                    <div className="min-w-0">
                       <span className="inline-flex rounded-full bg-cream-100 px-3 py-1 text-xs font-semibold text-brown-700">
                         {product.category}
                       </span>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const toneClasses = {
   info: 'border-tea-200 bg-tea-50 text-brown-900',
@@ -8,27 +8,43 @@ const toneClasses = {
 };
 
 export default function Notification({ message, tone = 'info', autoDismissAfter, onDismiss }) {
+  const [isVisible, setIsVisible] = useState(Boolean(message));
+  const resolvedTone = tone in toneClasses ? tone : 'info';
+  const isErrorTone = resolvedTone === 'error';
+
   useEffect(() => {
-    if (!message || !autoDismissAfter || !onDismiss) {
+    if (!message) {
+      setIsVisible(false);
+      return;
+    }
+
+    setIsVisible(true);
+  }, [message]);
+
+  useEffect(() => {
+    if (!message || !autoDismissAfter) {
       return undefined;
     }
 
     const timeoutId = window.setTimeout(() => {
-      onDismiss();
+      setIsVisible(false);
+      if (onDismiss) {
+        onDismiss();
+      }
     }, autoDismissAfter);
 
     return () => window.clearTimeout(timeoutId);
   }, [autoDismissAfter, message, onDismiss]);
 
-  if (!message) {
+  if (!message || !isVisible) {
     return null;
   }
 
   return (
     <div
-      role="alert"
-      aria-live={tone === 'error' ? 'assertive' : 'polite'}
-      className={`rounded-2xl border px-4 py-3 text-sm font-medium shadow-sm ${toneClasses[tone] || toneClasses.info}`}
+      role={isErrorTone ? 'alert' : 'status'}
+      aria-live={isErrorTone ? 'assertive' : 'polite'}
+      className={`rounded-2xl border px-4 py-3 text-sm font-medium shadow-sm ${toneClasses[resolvedTone]}`}
     >
       <div className="flex items-start justify-between gap-3">
         <p className="leading-6">{message}</p>

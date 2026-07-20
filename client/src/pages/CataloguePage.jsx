@@ -42,9 +42,14 @@ export default function CataloguePage() {
         ) : null}
 
         <div className="card space-y-5">
-          <span className="inline-flex rounded-full bg-tea-100 px-4 py-2 text-sm font-semibold text-tea-800">
-            Sri Lankan e-commerce MVP
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="inline-flex rounded-full bg-tea-100 px-4 py-2 text-sm font-semibold text-tea-800">
+              Sri Lankan e-commerce MVP
+            </span>
+            <span className="inline-flex rounded-full border border-cream-200 bg-white px-3 py-1 text-sm font-medium text-brown-700">
+              Fresh picks from local makers
+            </span>
+          </div>
           <div className="space-y-4">
             <h1 className="heading-xl max-w-3xl">Locally made products from across Sri Lanka.</h1>
             <p className="body-copy max-w-2xl">
@@ -63,18 +68,28 @@ export default function CataloguePage() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {products.map((product) => (
-              <article key={product.id} className="card-surface flex h-full flex-col overflow-hidden">
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cream-200 bg-cream-50 px-4 py-3 text-sm text-brown-700 shadow-sm">
+              <span className="font-semibold">Showing {products.length} products</span>
+              <span className="font-medium">Browse locally made favourites</span>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {products.map((product) => (
+              <article key={product.id} className="card-surface flex h-full flex-col overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="h-52 w-full rounded-2xl object-cover"
+                  className="h-52 w-full rounded-2xl object-cover ring-1 ring-cream-100"
                 />
 
                 <div className="mt-5 flex flex-1 flex-col gap-4">
+                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em] text-brown-500">
+                    <span>Featured</span>
+                    <span>Local</span>
+                  </div>
                   <div className="flex items-start justify-between gap-3">
-                    <div>
+                    <div className="min-w-0">
                       <span className="inline-flex rounded-full bg-cream-100 px-3 py-1 text-xs font-semibold text-brown-700">
                         {product.category}
                       </span>
@@ -85,7 +100,7 @@ export default function CataloguePage() {
                     </div>
                   </div>
 
-                  <p className="body-copy text-sm">{product.shortDescription}</p>
+                  <p className="body-copy text-sm leading-6">{product.shortDescription}</p>
 
                   <div className="mt-auto">
                     <Link to={`/product/${product.id}`} className="primary-button w-full">

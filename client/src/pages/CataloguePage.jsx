@@ -64,6 +64,11 @@ export default function CataloguePage() {
     setSelectedCategory('All categories');
   };
 
+  const activeFilterSummary = [
+    searchTerm.trim() ? `Search: ${searchTerm.trim()}` : null,
+    selectedCategory !== 'All categories' ? `Category: ${selectedCategory}` : null,
+  ].filter(Boolean);
+
   return (
     <section className="page-container py-10 sm:py-14">
       <div className="space-y-8">
@@ -86,13 +91,14 @@ export default function CataloguePage() {
               Discover tea, spices, handicrafts, apparel, and personal care essentials from small local makers.
             </p>
           </div>
-          <div className="grid gap-4 rounded-3xl bg-white/80 p-4 ring-1 ring-cream-200 sm:grid-cols-[minmax(0,1fr)_240px]">
+          <div className="grid gap-4 rounded-[1.5rem] bg-white/90 p-4 shadow-sm ring-1 ring-cream-200 transition-all duration-300 ease-out hover:shadow-md sm:grid-cols-[minmax(0,1fr)_240px]">
             <label className="space-y-2">
               <span className="text-sm font-semibold text-brown-700">Search products</span>
               <input
-                className="form-input"
+                className="form-input transition-all duration-200 focus:ring-2 focus:ring-tea-200"
                 type="search"
                 placeholder="Search by name, category, or description"
+                aria-label="Search products"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
@@ -101,8 +107,9 @@ export default function CataloguePage() {
             <label className="space-y-2">
               <span className="text-sm font-semibold text-brown-700">Category</span>
               <select
-                className="form-input"
+                className="form-input transition-all duration-200 focus:ring-2 focus:ring-tea-200"
                 value={selectedCategory}
+                aria-label="Filter by category"
                 onChange={(event) => setSelectedCategory(event.target.value)}
               >
                 {categories.map((category) => (
@@ -127,10 +134,17 @@ export default function CataloguePage() {
         ) : (
 
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-brown-600">
-              <span>
-                Showing {filteredProducts.length} of {products.length} products
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cream-200 bg-cream-50/70 px-4 py-3 text-sm text-brown-600 shadow-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span>
+                  Showing {filteredProducts.length} of {products.length} products
+                </span>
+                {activeFilterSummary.length > 0 ? (
+                  <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-brown-700 ring-1 ring-cream-200">
+                    {activeFilterSummary.join(' • ')}
+                  </span>
+                ) : null}
+              </div>
               {hasActiveFilters ? (
                 <button className="secondary-button px-4 py-2 text-xs" onClick={clearFilters} type="button">
                   Clear filters
@@ -139,7 +153,7 @@ export default function CataloguePage() {
             </div>
 
             {filteredProducts.length === 0 ? (
-              <div className="card-surface space-y-3 text-center">
+              <div className="card-surface space-y-3 rounded-[1.5rem] border border-dashed border-cream-300 p-8 text-center">
                 <h2 className="heading-md">No products match your filters.</h2>
                 <p className="body-copy text-sm">
                   Try a different search term or choose another category.
@@ -153,12 +167,16 @@ export default function CataloguePage() {
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredProducts.map((product) => (
-              <article key={product.id} className="card-surface flex h-full flex-col overflow-hidden">
+              <article key={product.id} className="card-surface group relative flex h-full flex-col overflow-hidden transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-xl hover:ring-2 hover:ring-tea-200/70">
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="h-52 w-full rounded-2xl object-cover ring-1 ring-cream-100"
+                  className="h-52 w-full rounded-2xl object-cover ring-1 ring-cream-100 transition duration-300 ease-out group-hover:scale-105 group-hover:brightness-110"
                 />
+                <div className="pointer-events-none absolute inset-x-3 top-3 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.25em] text-white">
+                  <span className="rounded-full bg-brown-700/80 px-2 py-1">New</span>
+                  <span className="rounded-full bg-tea-700/80 px-2 py-1">Popular</span>
+                </div>
 
                 <div className="mt-5 flex flex-1 flex-col gap-4">
                   <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em] text-brown-500">
@@ -171,8 +189,9 @@ export default function CataloguePage() {
                         {product.category}
                       </span>
                       <h2 className="heading-md mt-3">{product.name}</h2>
+                      <p className="mt-2 text-sm text-brown-600">{product.description?.slice(0, 80)}{product.description?.length > 80 ? '…' : ''}</p>
                     </div>
-                    <div className="shrink-0 rounded-full bg-spice-100 px-3 py-1 text-sm font-semibold text-spice-700">
+                    <div className="shrink-0 rounded-full bg-spice-100 px-3 py-1 text-sm font-semibold text-spice-700 transition-colors duration-200 group-hover:bg-spice-200">
                       {formatLkr(product.price)}
                     </div>
                   </div>
@@ -180,7 +199,7 @@ export default function CataloguePage() {
                   <p className="body-copy text-sm leading-6">{product.shortDescription}</p>
 
                   <div className="mt-auto">
-                    <Link to={`/product/${product.id}`} className="primary-button w-full">
+                    <Link to={`/product/${product.id}`} className="primary-button w-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                       View Product
                     </Link>
                   </div>

@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
 const navLinkClass = ({ isActive }) =>
@@ -9,6 +10,7 @@ const navLinkClass = ({ isActive }) =>
 
 export default function Layout() {
   const { itemCount } = useCart();
+  const { currentUser, isAuthenticated, logout } = useAuth();
 
   return (
     <div className="page-shell text-brown-900">
@@ -35,6 +37,25 @@ export default function Layout() {
                 ) : null}
               </span>
             </NavLink>
+            {isAuthenticated ? (
+              <>
+                <span className="hidden rounded-full border border-tea-700/20 bg-white/80 px-4 py-2 text-sm font-medium text-brown-700 sm:inline-flex">
+                  {currentUser.fullName}
+                </span>
+                <button type="button" className={navLinkClass({ isActive: false })} onClick={logout}>
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <NavLink to="/login" className={navLinkClass}>
+                  Sign in
+                </NavLink>
+                <NavLink to="/signup" className={navLinkClass}>
+                  Register
+                </NavLink>
+              </>
+            )}
           </nav>
         </div>
       </header>

@@ -109,14 +109,20 @@ export default function ProductPage() {
                     type="button"
                     className="primary-button"
                     onClick={() => {
-                      addToCart(product, quantity);
-                      setButtonLabel('Added ✓');
-                      setNotice(`Added ${quantity} ${quantity === 1 ? 'item' : 'items'} to cart.`);
-                      window.clearTimeout(resetButtonTimer.current);
-                      resetButtonTimer.current = window.setTimeout(() => {
-                        setButtonLabel('Add to Cart');
-                        setNotice('');
-                      }, 1000);
+                        const result = addToCart(product, quantity);
+
+                        if (!result.success) {
+                          setNotice(result.message);
+                          return;
+                        }
+
+                        setButtonLabel('Added ✓');
+                        setNotice(`Added ${quantity} ${quantity === 1 ? 'item' : 'items'} to cart.`);
+                        window.clearTimeout(resetButtonTimer.current);
+                        resetButtonTimer.current = window.setTimeout(() => {
+                          setButtonLabel('Add to Cart');
+                          setNotice('');
+                        }, 1000);
                     }}
                   >
                     {buttonLabel}

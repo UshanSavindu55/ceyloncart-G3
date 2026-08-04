@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext(null);
 const CART_STORAGE_KEY = 'ceyloncart-cart-items';
@@ -133,6 +134,7 @@ function calculateTotals(items) {
 }
 
 export function CartProvider({ children }) {
+  const { isAuthenticated } = useAuth();
   const [items, setItems] = useState(() => readStoredCart());
   const [lastOrder, setLastOrderState] = useState(() => readStoredOrder());
 
@@ -153,9 +155,13 @@ export function CartProvider({ children }) {
   }, [lastOrder]);
 
   const addToCart = useCallback((product, quantity = 1) => {
+    if (!isAuthenticated) {
+      return { success: false, message: 'Please sign in to add items to your cart.' };
+    }
+
     const normalizedProduct = normalizeProduct(product);
     if (!normalizedProduct) {
-      return;
+      return { success: false, message: 'Invalid product.' };
     }
 
     const quantityToAdd = normalizeQuantity(quantity);
@@ -182,7 +188,9 @@ export function CartProvider({ children }) {
         },
       ];
     });
-  }, []);
+
+    return { success: true };
+  }, [isAuthenticated]);
 
   const removeFromCart = useCallback((id) => {
     const normalizedId = typeof id === 'string' || typeof id === 'number' ? String(id).trim() : '';

@@ -1,12 +1,14 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import CataloguePage from './pages/CataloguePage';
+import LoginPage from './pages/LoginPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import PaymentPage from './pages/PaymentPage';
 import ConfirmationPage from './pages/ConfirmationPage';
 import NotFoundPage from './pages/NotFoundPage';
+import SignupPage from './pages/SignupPage';
 
 export default function App() {
   return (
@@ -16,6 +18,10 @@ export default function App() {
           <Route path="/" element={<CataloguePage />} />
           <Route path="/product/:id" element={<ProductPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/sign-in" element={<Navigate to="/login" replace />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/register" element={<Navigate to="/signup" replace />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />

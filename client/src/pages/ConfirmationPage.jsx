@@ -1,5 +1,7 @@
 import { Link, Navigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import Notification from '../components/Notification';
 
 function formatLkr(amount) {
   return new Intl.NumberFormat('en-LK', {
@@ -18,6 +20,7 @@ function formatDate(dateValue) {
 
 export default function ConfirmationPage() {
   const { lastOrder } = useCart();
+  const [copyMessage, setCopyMessage] = useState('');
 
   if (!lastOrder) {
     return <Navigate to="/" replace />;
@@ -37,7 +40,25 @@ export default function ConfirmationPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brown-500">Order ID</p>
-                <p className="mt-2 font-semibold text-brown-900">{lastOrder.orderId}</p>
+                  <div className="mt-2 flex items-center gap-3">
+                    <p className="font-semibold text-brown-900">{lastOrder.orderId}</p>
+                    <button
+                      type="button"
+                      className="secondary-button px-2 py-1 text-sm"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(String(lastOrder.orderId));
+                          setCopyMessage('Order ID copied to clipboard');
+                          window.setTimeout(() => setCopyMessage(''), 2500);
+                        } catch (err) {
+                          setCopyMessage('Unable to copy order ID');
+                          window.setTimeout(() => setCopyMessage(''), 2500);
+                        }
+                      }}
+                    >
+                      Copy
+                    </button>
+                  </div>
               </div>
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brown-500">Order Date</p>
@@ -77,6 +98,8 @@ export default function ConfirmationPage() {
               <span>{formatLkr(lastOrder.total)}</span>
             </div>
           </div>
+
+          <Notification message={copyMessage} tone="success" onDismiss={() => setCopyMessage('')} autoDismissAfter={2500} />
 
           <aside className="card-surface space-y-4">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-tea-700">Success</p>

@@ -35,6 +35,14 @@ export default function PaymentPage() {
   const [statusMessage, setStatusMessage] = useState('');
   const [statusTone, setStatusTone] = useState('info');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [sandboxEnabled] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem('ceyloncart-simulated-payment');
+      return raw === null ? true : raw === 'true';
+    } catch (_) {
+      return true;
+    }
+  });
   const hideStatusTimer = useRef(null);
 
   useEffect(() => {
@@ -139,8 +147,11 @@ export default function PaymentPage() {
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_0.95fr] lg:items-start">
           <form className="card space-y-5" onSubmit={handleSubmit} noValidate>
-            <div className="rounded-2xl border border-spice-200 bg-spice-50 px-4 py-3 text-sm text-brown-800">
+            <div className="rounded-2xl border border-spice-200 bg-spice-50 px-4 py-3 text-sm text-brown-800 flex items-center justify-between">
               This is a fictional payment form. Do not enter a real card.
+              <span className="ml-3 inline-flex items-center rounded-full bg-cream-200 px-2 py-0.5 text-xs font-semibold text-brown-800">
+                {sandboxEnabled ? 'Sandbox' : 'Live (not configured)'}
+              </span>
             </div>
 
             <div className="rounded-2xl border border-tea-200 bg-tea-50 px-4 py-3 text-sm text-brown-800 space-y-2">
@@ -183,8 +194,23 @@ export default function PaymentPage() {
               </div>
             </div>
 
-            <button type="submit" className="primary-button w-full sm:w-auto" disabled={isProcessing}>
-              {isProcessing ? 'Processing...' : 'Pay Now'}
+            <button
+              type="submit"
+              className={`primary-button w-full sm:w-auto ${isProcessing ? 'opacity-80 cursor-wait' : ''}`}
+              disabled={isProcessing}
+              aria-busy={isProcessing}
+            >
+              {isProcessing ? (
+                <span className="inline-flex items-center gap-2">
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                'Pay Now'
+              )}
             </button>
           </form>
 

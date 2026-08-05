@@ -1,9 +1,38 @@
 const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const AUTH_TOKEN_STORAGE_KEY = 'ceyloncart-auth-token';
+
+function getStoredAuthToken() {
+  try {
+    return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthToken(token) {
+  try {
+    if (token) {
+      window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+    }
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+export function clearAuthToken() {
+  try {
+    window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    // Ignore storage failures.
+  }
+}
 
 async function request(path, options = {}) {
+  const token = getStoredAuthToken();
   const response = await fetch(`${apiBaseUrl}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
     ...options,
@@ -52,4 +81,26 @@ export async function createOrder(orderDetails = {}) {
     method: 'POST',
     body: JSON.stringify(orderDetails),
   });
+}
+
+export async function fetchOrders() {
+  return request('/api/orders');
+}
+
+export async function loginUser(credentials = {}) {
+  return request('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(credentials),
+  });
+}
+
+export async function registerUser(registration = {}) {
+  return request('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(registration),
+  });
+}
+
+export async function fetchCurrentUser() {
+  return request('/api/auth/me');
 }

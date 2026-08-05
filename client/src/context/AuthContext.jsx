@@ -1,23 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { clearAuthToken, fetchCurrentUser, loginUser, registerUser, setAuthToken } from '../services/api';
 
 const AuthContext = createContext(null);
-const USERS_STORAGE_KEY = 'ceyloncart-users';
 const CURRENT_USER_STORAGE_KEY = 'ceyloncart-current-user';
-
-const DEFAULT_USERS = [
-  {
-    id: 'user-1',
-    fullName: 'Ayesha Perera',
-    email: 'ayesha@example.com',
-    password: 'Ceylon1234!',
-  },
-  {
-    id: 'user-2',
-    fullName: 'Kasun Silva',
-    email: 'kasun@example.com',
-    password: 'SriLanka2026!',
-  },
-];
 
 function readStoredValue(key, fallback) {
   try {
@@ -25,6 +10,22 @@ function readStoredValue(key, fallback) {
     return storedValue ? JSON.parse(storedValue) : fallback;
   } catch {
     return fallback;
+  }
+}
+
+function writeStoredValue(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Ignore storage write issues.
+  }
+}
+
+function removeStoredValue(key) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Ignore storage remove issues.
   }
 }
 
@@ -48,129 +49,109 @@ function sanitizeUser(user) {
   };
 }
 
-function readStoredUsers() {
-  const storedUsers = readStoredValue(USERS_STORAGE_KEY, null);
-
-  if (!Array.isArray(storedUsers) || storedUsers.length === 0) {
-    return DEFAULT_USERS;
-  }
-
-  const normalizedUsers = storedUsers
-    .map((user) => {
-      if (!user || typeof user !== 'object' || Array.isArray(user)) {
-        return null;
-      }
-
-      const id = typeof user.id === 'string' || typeof user.id === 'number' ? String(user.id).trim() : '';
-      const fullName = typeof user.fullName === 'string' ? user.fullName.trim() : '';
-      const email = typeof user.email === 'string' ? user.email.trim().toLowerCase() : '';
-      const password = typeof user.password === 'string' ? user.password : '';
-
-      if (!id || !fullName || !email || !password) {
-        return null;
-      }
-
-      return {
-        id,
-        fullName,
-        email,
-        password,
-      };
-    })
-    .filter(Boolean);
-
-  return normalizedUsers.length > 0 ? normalizedUsers : DEFAULT_USERS;
-}
-
 export function AuthProvider({ children }) {
-  const [users, setUsers] = useState(() => readStoredUsers());
   const [currentUser, setCurrentUser] = useState(() => sanitizeUser(readStoredValue(CURRENT_USER_STORAGE_KEY, null)));
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-    } catch {
-      // Ignore storage write issues.
+    async function hydrateCurrentUser() {
+      try {
+        const response = await fetchCurrentUser();
+        const user = sanitizeUser(response?.user);
+
+        if (user) {
+          setCurrentUser(user);
+          writeStoredValue(CURRENT_USER_STORAGE_KEY, user);
+        } else {
+          clearAuthToken();
+          removeStoredValue(CURRENT_USER_STORAGE_KEY);
+          setCurrentUser(null);
+        }
+      } catch {
+        clearAuthToken();
+        removeStoredValue(CURRENT_USER_STORAGE_KEY);
+        setCurrentUser(null);
+      }
     }
-  }, [users]);
+
+    hydrateCurrentUser();
+  }, []);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(currentUser));
-    } catch {
-      // Ignore storage write issues.
+    if (currentUser) {
+      writeStoredValue(CURRENT_USER_STORAGE_KEY, currentUser);
+    } else {
+      removeStoredValue(CURRENT_USER_STORAGE_KEY);
     }
   }, [currentUser]);
 
-  const login = useCallback(
-    ({ email, password }) => {
-      const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
-      const normalizedPassword = typeof password === 'string' ? password : '';
+  const login = useCallback(async ({ email, password }) => {
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const normalizedPassword = typeof password === 'string' ? password : '';
 
-      if (!normalizedEmail || !normalizedPassword) {
-        return { success: false, message: 'Email and password are required.' };
+    if (!normalizedEmail || !normalizedPassword) {
+      return { success: false, message: 'Email and password are required.' };
+    }
+
+    try {
+      const { token, user } = await loginUser({ email: normalizedEmail, password: normalizedPassword });
+
+      if (!token || !user) {
+        return { success: false, message: 'Invalid server response during login.' };
       }
 
-      const matchedUser = users.find(
-        (user) => user.email.toLowerCase() === normalizedEmail && user.password === normalizedPassword,
-      );
-
-      if (!matchedUser) {
-        return { success: false, message: 'Invalid email or password.' };
-      }
-
-      const nextUser = sanitizeUser(matchedUser);
+      const nextUser = sanitizeUser(user);
+      setAuthToken(token);
       setCurrentUser(nextUser);
+      writeStoredValue(CURRENT_USER_STORAGE_KEY, nextUser);
 
       return { success: true, user: nextUser };
-    },
-    [users],
-  );
+    } catch (error) {
+      return { success: false, message: error.message || 'Login failed. Please try again.' };
+    }
+  }, []);
 
-  const register = useCallback(
-    ({ fullName, email, password }) => {
-      const normalizedFullName = typeof fullName === 'string' ? fullName.trim() : '';
-      const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
-      const normalizedPassword = typeof password === 'string' ? password : '';
+  const register = useCallback(async ({ fullName, email, password }) => {
+    const normalizedFullName = typeof fullName === 'string' ? fullName.trim() : '';
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const normalizedPassword = typeof password === 'string' ? password : '';
 
-      if (!normalizedFullName || !normalizedEmail || !normalizedPassword) {
-        return { success: false, message: 'All fields are required.' };
+    if (!normalizedFullName || !normalizedEmail || !normalizedPassword) {
+      return { success: false, message: 'All fields are required.' };
+    }
+
+    try {
+      const { token, user } = await registerUser({ fullName: normalizedFullName, email: normalizedEmail, password: normalizedPassword });
+
+      if (!token || !user) {
+        return { success: false, message: 'Invalid server response during registration.' };
       }
 
-      if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
-        return { success: false, message: 'An account with that email already exists.' };
-      }
-
-      const newUser = {
-        id: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `user-${Date.now()}`,
-        fullName: normalizedFullName,
-        email: normalizedEmail,
-        password: normalizedPassword,
-      };
-
-      setUsers((currentUsers) => [...currentUsers, newUser]);
-      const nextUser = sanitizeUser(newUser);
+      const nextUser = sanitizeUser(user);
+      setAuthToken(token);
       setCurrentUser(nextUser);
+      writeStoredValue(CURRENT_USER_STORAGE_KEY, nextUser);
 
       return { success: true, user: nextUser };
-    },
-    [users],
-  );
+    } catch (error) {
+      return { success: false, message: error.message || 'Registration failed. Please try again.' };
+    }
+  }, []);
 
   const logout = useCallback(() => {
+    clearAuthToken();
+    removeStoredValue(CURRENT_USER_STORAGE_KEY);
     setCurrentUser(null);
   }, []);
 
   const value = useMemo(
     () => ({
-      users,
       currentUser,
       isAuthenticated: Boolean(currentUser),
       login,
       register,
       logout,
     }),
-    [currentUser, login, logout, register, users],
+    [currentUser, login, logout, register],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

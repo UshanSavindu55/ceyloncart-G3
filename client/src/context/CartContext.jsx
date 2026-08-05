@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext(null);
 const CART_STORAGE_KEY = 'ceyloncart-cart-items';
@@ -22,12 +23,110 @@ function normalizeQuantity(quantity) {
   return Math.max(1, Math.floor(parsedQuantity));
 }
 
+function isValidCartItem(item) {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) {
+    return false;
+  }
+
+  const id = typeof item.id === 'string' || typeof item.id === 'number' ? String(item.id).trim() : '';
+  const name = typeof item.name === 'string' ? item.name.trim() : '';
+  const price = Number(item.price);
+  const quantity = normalizeQuantity(item.quantity);
+
+  return Boolean(id) && Boolean(name) && Number.isFinite(price) && price >= 0 && quantity >= 1;
+}
+
+function sanitizeCartItem(item) {
+  if (!isValidCartItem(item)) {
+    return null;
+  }
+
+  const normalizedId = typeof item.id === 'string' || typeof item.id === 'number' ? String(item.id).trim() : '';
+  const normalizedName = typeof item.name === 'string' ? item.name.trim() : '';
+  const normalizedPrice = Number(item.price);
+  const normalizedQuantity = normalizeQuantity(item.quantity);
+  const category = typeof item.category === 'string' ? item.category.trim() : '';
+  const image = typeof item.image === 'string' ? item.image : '';
+  const shortDescription = typeof item.shortDescription === 'string' ? item.shortDescription.trim() : '';
+
+  return {
+    id: normalizedId,
+    name: normalizedName,
+    category,
+    price: normalizedPrice,
+    image,
+    shortDescription,
+    quantity: normalizedQuantity,
+  };
+}
+
+function readStoredCart() {
+  try {
+    const storedValue = window.localStorage.getItem(CART_STORAGE_KEY);
+    if (storedValue === null) {
+      return [];
+    }
+
+    const parsedValue = JSON.parse(storedValue);
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return parsedValue.map(sanitizeCartItem).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function readStoredOrder() {
+  try {
+    const storedValue = window.localStorage.getItem(LAST_ORDER_STORAGE_KEY);
+    if (storedValue === null) {
+      return null;
+    }
+
+    const parsedValue = JSON.parse(storedValue);
+    return parsedValue && typeof parsedValue === 'object' ? parsedValue : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeProduct(product) {
+  if (!product || typeof product !== 'object' || Array.isArray(product)) {
+    return null;
+  }
+
+  const id = typeof product.id === 'string' || typeof product.id === 'number' ? String(product.id).trim() : '';
+  const name = typeof product.name === 'string' ? product.name.trim() : '';
+  const price = Number(product.price);
+
+  if (!id || !name || !Number.isFinite(price) || price < 0) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    category: typeof product.category === 'string' ? product.category.trim() : '',
+    price,
+    image: typeof product.image === 'string' ? product.image : '',
+    shortDescription: typeof product.shortDescription === 'string' ? product.shortDescription.trim() : '',
+  };
+}
+
 function calculateTotals(items) {
-  return items.reduce(
+  return (Array.isArray(items) ? items : []).reduce(
     (accumulator, item) => {
-      const lineTotal = item.price * item.quantity;
-      accumulator.total += lineTotal;
-      accumulator.itemCount += item.quantity;
+      const nextPrice = Number(item.price);
+      const nextQuantity = normalizeQuantity(item.quantity);
+
+      if (!Number.isFinite(nextPrice) || nextPrice < 0) {
+        return accumulator;
+      }
+
+      accumulator.total += nextPrice * nextQuantity;
+      accumulator.itemCount += nextQuantity;
       return accumulator;
     },
     { total: 0, itemCount: 0 },
@@ -35,81 +134,122 @@ function calculateTotals(items) {
 }
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState(() => readStoredValue(CART_STORAGE_KEY, []));
-  const [lastOrder, setLastOrderState] = useState(() => readStoredValue(LAST_ORDER_STORAGE_KEY, null));
+  const { isAuthenticated } = useAuth();
+  const [items, setItems] = useState(() => readStoredCart());
+  const [lastOrder, setLastOrderState] = useState(() => readStoredOrder());
 
   useEffect(() => {
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    try {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // Ignore storage write issues.
+    }
   }, [items]);
 
   useEffect(() => {
-    window.localStorage.setItem(LAST_ORDER_STORAGE_KEY, JSON.stringify(lastOrder));
+    try {
+      window.localStorage.setItem(LAST_ORDER_STORAGE_KEY, JSON.stringify(lastOrder));
+    } catch {
+      // Ignore storage write issues.
+    }
   }, [lastOrder]);
 
-  const addToCart = (product, quantity = 1) => {
-    if (!product) {
-      return;
+  const addToCart = useCallback((product, quantity = 1) => {
+    if (!isAuthenticated) {
+      return { success: false, message: 'Please sign in to add items to your cart.' };
+    }
+
+    const normalizedProduct = normalizeProduct(product);
+    if (!normalizedProduct) {
+      return { success: false, message: 'Invalid product.' };
     }
 
     const quantityToAdd = normalizeQuantity(quantity);
 
     setItems((currentItems) => {
-      const existingItem = currentItems.find((item) => item.id === product.id);
+      const existingItem = currentItems.find((item) => item.id === normalizedProduct.id);
 
       if (existingItem) {
         return currentItems.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + quantityToAdd } : item,
+          item.id === normalizedProduct.id ? { ...item, quantity: item.quantity + quantityToAdd } : item,
         );
       }
 
       return [
         ...currentItems,
         {
-          id: product.id,
-          name: product.name,
-          category: product.category,
-          price: product.price,
-          image: product.image,
-          shortDescription: product.shortDescription,
+          id: normalizedProduct.id,
+          name: normalizedProduct.name,
+          category: normalizedProduct.category,
+          price: normalizedProduct.price,
+          image: normalizedProduct.image,
+          shortDescription: normalizedProduct.shortDescription,
           quantity: quantityToAdd,
         },
       ];
     });
-  };
 
-  const removeFromCart = (id) => {
-    setItems((currentItems) => currentItems.filter((item) => item.id !== id));
-  };
+    return { success: true };
+  }, [isAuthenticated]);
 
-  const updateQuantity = (id, quantity) => {
+  const removeFromCart = useCallback((id) => {
+    const normalizedId = typeof id === 'string' || typeof id === 'number' ? String(id).trim() : '';
+    if (!normalizedId) {
+      return;
+    }
+
+    setItems((currentItems) => {
+      const hasMatchingItem = currentItems.some((item) => item.id === normalizedId);
+      if (!hasMatchingItem) {
+        return currentItems;
+      }
+
+      return currentItems.filter((item) => item.id !== normalizedId);
+    });
+  }, []);
+
+  const updateQuantity = useCallback((id, quantity) => {
+    const normalizedId = typeof id === 'string' || typeof id === 'number' ? String(id).trim() : '';
+    if (!normalizedId) {
+      return;
+    }
+
     const nextQuantity = normalizeQuantity(quantity);
 
-    setItems((currentItems) =>
-      currentItems.map((item) => (item.id === id ? { ...item, quantity: nextQuantity } : item)),
-    );
-  };
+    setItems((currentItems) => {
+      const hasMatchingItem = currentItems.some((item) => item.id === normalizedId);
+      if (!hasMatchingItem) {
+        return currentItems;
+      }
 
-  const clearCart = () => {
+      return currentItems.map((item) => (item.id === normalizedId ? { ...item, quantity: nextQuantity } : item));
+    });
+  }, []);
+
+  const clearCart = useCallback(() => {
     setItems([]);
-  };
+  }, []);
 
-  const setLastOrder = (order) => {
+  const setLastOrder = useCallback((order) => {
     setLastOrderState(order);
-  };
+  }, []);
 
   const { total, itemCount } = useMemo(() => calculateTotals(items), [items]);
 
-  const value = {
-    items,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    total,
-    itemCount,
-    lastOrder,
-    setLastOrder,
-  };
+  const value = useMemo(
+    () => ({
+      items,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      total,
+      itemCount,
+      lastOrder,
+      setLastOrder,
+    }),
+    [addToCart, clearCart, itemCount, items, lastOrder, removeFromCart, setLastOrder, total, updateQuantity],
+  );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

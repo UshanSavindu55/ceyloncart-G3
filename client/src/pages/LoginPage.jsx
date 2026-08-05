@@ -57,10 +57,7 @@ export default function LoginPage() {
           <span className="inline-flex rounded-full bg-tea-100 px-4 py-2 text-sm font-semibold text-tea-800">
             Sign in
           </span>
-          <h1 className="heading-xl max-w-xl">Access your cart and saved session.</h1>
-          <p className="body-copy max-w-2xl">
-            This demo authenticates using the backend API and stores a session token in localStorage for returning users.
-          </p>
+          <h1 className="heading-xl max-w-xl">Access your cart from here</h1>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="card-surface space-y-1">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brown-500">What you can do</p>

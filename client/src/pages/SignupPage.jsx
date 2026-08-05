@@ -58,15 +58,7 @@ export default function SignupPage() {
             Create account
           </span>
           <h1 className="heading-xl max-w-xl">Register a new account in seconds.</h1>
-          <p className="body-copy max-w-2xl">
-            This project registers new accounts through the backend API and stores your session token so you stay signed in.
-          </p>
-          <div className="card-surface space-y-2">
-            <p className="text-sm font-semibold text-brown-700">How it works</p>
-            <p className="text-sm text-brown-700">
-              New accounts are created on the backend and automatically signed in after registration.
-            </p>
-          </div>
+  
         </div>
 
         <div className="card space-y-6">

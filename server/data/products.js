@@ -4,7 +4,7 @@ export const products = [
     name: 'Nuwara Eliya Silver Tips Tea',
     category: 'Tea',
     price: 2850,
-    image: 'https://loremflickr.com/1200/800/tea-plantation?lock=1',
+    image: 'https://loremflickr.com/1200/800/tea-bag?lock=7',
     shortDescription: 'Delicate whole-leaf white tea from the cool highlands.',
     description:
       'A small-batch white tea picked from high elevation estates in Nuwara Eliya. It has a soft floral aroma, a pale golden cup, and a clean finish that suits slow afternoon brewing.',
@@ -14,7 +14,7 @@ export const products = [
     name: 'Uva Highland Black Tea',
     category: 'Tea',
     price: 1950,
-    image: 'https://loremflickr.com/1200/800/tea?lock=2',
+    image: 'https://loremflickr.com/1200/800/cup-of-coffee?lock=6',
     shortDescription: 'Bright, brisk black tea with a classic Sri Lankan profile.',
     description:
       'A bold broken-leaf black tea from Uva that brews into a lively amber cup. It is ideal for morning tea, with enough strength for milk or a bright citrus finish on its own.',
@@ -24,7 +24,7 @@ export const products = [
     name: 'Ceylon Cinnamon Sticks',
     category: 'Spices',
     price: 1450,
-    image: 'https://upload.wikimedia.org/wikipedia/commons/5/52/Cinnamon_tree.jpg',
+    image: 'https://loremflickr.com/1200/800/cinnamon?lock=5',
     shortDescription: 'Sweet, fragrant cinnamon sticks sourced for cooking and tea.',
     description:
       'Authentic Ceylon cinnamon sticks with a delicate layered bark and a naturally sweet scent. Use them in curries, rice dishes, desserts, or steep them in warm water for a gentle spiced infusion.',
@@ -54,7 +54,7 @@ export const products = [
     name: 'Lacquered Kandy Keepsake Box',
     category: 'Handicrafts',
     price: 4100,
-    image: 'https://loremflickr.com/1200/800/wooden-box?lock=6',
+    image: 'https://loremflickr.com/1200/800/wooden-box?lock=2',
     shortDescription: 'A painted wooden keepsake box with local artisan detail.',
     description:
       'A decorative wooden box finished with lacquer-style colorwork inspired by Kandy craft traditions. Suitable for jewelry, small gifts, or desk storage, with a finish that feels both cultural and practical.',
@@ -64,20 +64,20 @@ export const products = [
     name: 'Cotton Kurta Shirt',
     category: 'Apparel',
     price: 2650,
-    image: 'https://loremflickr.com/1200/800/cotton-shirt?lock=7',
+    image: 'https://loremflickr.com/1200/800/cotton-shirt?lock=6',
     shortDescription: 'Lightweight cotton apparel for warm weather comfort.',
     description:
       'A breathable cotton kurta shirt tailored for everyday wear in Sri Lanka’s warm climate. The cut is relaxed, the fabric is soft, and the style works equally well for casual or semi-formal occasions.',
   },
   {
     id: 8,
-    name: 'Handloom Batik Wrap Dress',
-    category: 'Apparel',
+    name: 'Handcrafted Leather Shoes',
+    category: 'Footwear',
     price: 5400,
-    image: 'https://loremflickr.com/1200/800/batik-dress?lock=8',
-    shortDescription: 'A vibrant batik-inspired dress with artisan character.',
+    image: 'https://loremflickr.com/1200/800/batik-dress?lock=1',
+    shortDescription: 'Premium handcrafted leather shoes with a classic finish.',
     description:
-      'A wrap dress made with batik-inspired patterning and a comfortable silhouette. It blends color, movement, and artisan texture into a versatile piece suitable for day outings and cultural events.',
+      'Elegant leather shoes crafted with attention to comfort and durability. Designed for everyday wear, these shoes combine traditional craftsmanship with a timeless style suitable for both casual and formal occasions.',
   },
   {
     id: 9,
@@ -94,7 +94,7 @@ export const products = [
     name: 'Herbal Neem Face Wash',
     category: 'Personal Care',
     price: 1380,
-    image: 'https://loremflickr.com/1200/800/face-wash?lock=10',
+    image: 'https://loremflickr.com/1200/800/bodylotion?lock=5',
     shortDescription: 'A refreshing herbal cleanser for everyday skincare.',
     description:
       'A mild face wash with neem and botanical extracts designed for a clean, refreshed feel. It is positioned as a simple daily cleanser for a small MVP personal-care assortment.',

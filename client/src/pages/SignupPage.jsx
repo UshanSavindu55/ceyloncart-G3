@@ -24,7 +24,7 @@ export default function SignupPage() {
     setErrorMessage('');
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -32,7 +32,7 @@ export default function SignupPage() {
       return;
     }
 
-    const result = register({
+    const result = await register({
       fullName: formData.fullName,
       email: formData.email,
       password: formData.password,
@@ -57,14 +57,14 @@ export default function SignupPage() {
           <span className="inline-flex rounded-full bg-spice-100 px-4 py-2 text-sm font-semibold text-spice-700">
             Create account
           </span>
-          <h1 className="heading-xl max-w-xl">Register a local demo account in seconds.</h1>
+          <h1 className="heading-xl max-w-xl">Register a new account in seconds.</h1>
           <p className="body-copy max-w-2xl">
-            This project keeps users in memory and stores them in localStorage, so you can test sign up and sign in without any database setup.
+            This project registers new accounts through the backend API and stores your session token so you stay signed in.
           </p>
           <div className="card-surface space-y-2">
             <p className="text-sm font-semibold text-brown-700">How it works</p>
             <p className="text-sm text-brown-700">
-              New accounts are added to the client-side user list and automatically signed in after registration.
+              New accounts are created on the backend and automatically signed in after registration.
             </p>
           </div>
         </div>

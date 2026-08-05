@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import productsRouter from './routes/products.js';
 import paymentRouter from './routes/payment.js';
 import ordersRouter from './routes/orders.js';
+import authRouter from './routes/auth.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.get('/api/health', (request, response) => {
   });
 });
 
+app.use('/api/auth', authRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/orders', ordersRouter);

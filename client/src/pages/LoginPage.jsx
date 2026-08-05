@@ -30,10 +30,10 @@ export default function LoginPage() {
     setErrorMessage('');
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const result = login({
+    const result = await login({
       email: formData.email,
       password: formData.password,
     });
@@ -59,7 +59,7 @@ export default function LoginPage() {
           </span>
           <h1 className="heading-xl max-w-xl">Access your cart and saved session.</h1>
           <p className="body-copy max-w-2xl">
-            This demo uses in-memory users with localStorage persistence. No database or API auth flow is required.
+            This demo authenticates using the backend API and stores a session token in localStorage for returning users.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="card-surface space-y-1">
